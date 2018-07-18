@@ -1,0 +1,10 @@
+accesspoint_ssid: rd-ng-tech1
+accesspoint_password: raspberry
+accesspoint_ip: 172.24.1.1
+accesspoint_netmask: 255.255.255.0
+accesspoint_network: 172.24.1.0
+accesspoint_broadcast: 172.24.1.255
+accesspoint_dns: 172.21.0.22
+accesspoint_dhcp_from: 172.24.1.50
+accesspoint_dhcp_to: 172.24.1.70
+accesspoint_dhcp_leasetime: 12h

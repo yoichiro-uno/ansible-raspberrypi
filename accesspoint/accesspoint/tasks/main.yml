@@ -1,0 +1,132 @@
+---
+- name: Update OS
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Install hostapd and dnsmasq
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - hostapd
+    - dnsmasq
+
+- name: wlan0 will be not managed by dhcpcd
+  lineinfile: 
+    dest: "/etc/dhcpcd.conf"
+    state: present
+    insertafter: 'EOF'
+    line: 'denyinterfaces wlan0'
+
+- name: Upload wlan0 interface file
+  template:
+    src: wlan0.j2
+    dest: "/etc/network/interfaces.d/wlan0"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: yes
+    backup: yes    
+
+- name: Upload hostapd.conf file
+  template:
+    src: hostapd.conf.j2
+    dest: "/etc/hostapd/hostapd.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: yes
+    backup: yes
+
+- name: Forward from wlan0 to eth0
+  lineinfile:
+    path: "/etc/default/hostapd"
+    state: present
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - {regexp: '^#DAEMON_CONF=', line: 'DAEMON_CONF="/etc/hostapd/hostapd.conf"'}
+
+- name: Upload dnsmasq.conf file
+  template:
+    src: dnsmasq.conf.j2
+    dest: "/etc/dnsmasq.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+    force: yes
+    backup: yes
+
+- name: Forward from wlan0 to eth0
+  lineinfile:
+    path: "/etc/sysctl.conf"
+    state: present
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - {regexp: '^#net.ipv4.ip_forward=1', line: 'net.ipv4.ip_forward=1'}
+
+- name: Set nat iptables to go out from eth0
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth0
+    jump: MASQUERAD
+
+- name: Set eth0 to wlan0 Forward filter
+  iptables:
+    chain: FORWARD
+    in_interface: eth0
+    out_interface: wlan0
+    cstate: RELATED,ESTABLISHED
+    jump: ACCEPT
+
+- name: Set wlan0 to eth0  Forward filter
+  iptables:
+    chain: FORWARD
+    in_interface: wlan0
+    out_interface: wth0
+    jump: ACCEPT
+
+- name: read iptables setteings on initializing
+  lineinfile: 
+    dest: "/etc/rc.local"
+    state: present
+    insertbefore: 'exit 0'
+    line: 'iptables-restore < /etc/iptables.ipv4.nat'
+
+- name: start hostapd
+  systemd:
+    name: dhcpcd
+    state: restarted
+
+- name: start hostapd
+  systemd:
+    name: hostapd
+    state: started
+    enabled: yes
+
+- name: start dnsmasq
+  systemd:
+    name: dnsmasq
+    state: started
+    enabled: yes
+
+- name: send reboot command
+  shell: /bin/bash -lc "shutdown -r now"
+
+- name: wait for raspberrypi to reboot
+  pause:
+    seconds: 30
+
+- name: start pinging
+  local_action: shell ansible -u {{ ansible_user_id }} -m ping {{ inventory_hostname }}
+  register: result
+  until: result.rc == 0
+  retries: 30
+  delay: 10
+
+- name: send reboot command
+  shell: /bin/bash -lc "uptime"

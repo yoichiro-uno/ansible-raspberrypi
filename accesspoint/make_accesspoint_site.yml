@@ -1,0 +1,6 @@
+---
+- name: Create Accesspoint
+  hosts: all
+  become: true
+  roles:
+    - accesspoint

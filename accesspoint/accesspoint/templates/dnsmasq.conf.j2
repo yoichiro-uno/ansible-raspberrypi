@@ -1,0 +1,7 @@
+interface=wlan0
+listen-address={{accesspoint_ip}} 
+bind-interfaces 
+server={{accesspoint_dns}} 
+domain-needed 
+bogus-priv
+dhcp-range={{accesspoint_dhcp_from}},{{accesspoint_dhcp_to}},{{accesspoint_dhcp_leasetime}}

@@ -1,0 +1,6 @@
+---
+- name: Upgrade OS
+  hosts: all
+  become: true
+  roles:
+    - upgradeos

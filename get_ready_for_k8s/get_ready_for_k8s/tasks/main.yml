@@ -1,0 +1,31 @@
+---
+- name: Add options to cmdline.txt for cgroups
+  lineinfile:
+    path: "/boot/cmdline.txt"
+    backrefs: true
+    state: present
+    regexp: '^(.*rootwait)$'
+    line: '\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
+  register: _changed
+
+- name: Disable swap
+  shell: /bin/bash -lc "dphys-swapfile swapoff;dphys-swapfile uninstall;update-rc.d dphys-swapfile remove"
+
+- name: Reboot Rp
+  shell: /bin/bash -lc "sleep 5 && reboot"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: _changed is changed
+
+- name: wait for restart
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 5
+    timeout: 300
+  when: _changed is changed
+
+- name: Test connection after reboot
+  ping:
+

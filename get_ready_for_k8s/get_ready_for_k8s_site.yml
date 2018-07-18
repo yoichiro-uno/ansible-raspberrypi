@@ -1,0 +1,6 @@
+---
+- name: Get Ready For K8S Installation
+  hosts: all
+  become: true
+  roles:
+    - get_ready_for_k8s
