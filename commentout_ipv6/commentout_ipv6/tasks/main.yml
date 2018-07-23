@@ -1,0 +1,11 @@
+- name: Comment out IPv6 settings
+  lineinfile:
+    path: "/etc/hosts"
+    backrefs: true
+    state: present
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - {regexp: '^(::1.*)', line: '#\1'}
+    - {regexp: '^(ff02::1.*)', line: '#\1'}
+    - {regexp: '^(ff02::2.*)', line: '#\1'}

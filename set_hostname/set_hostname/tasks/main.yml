@@ -1,0 +1,12 @@
+---
+- name: set hostname
+  hostname: 
+    name: "{{ my_host_var }}"
+
+- name: Add entry to hosts file
+  lineinfile:
+    path: "/etc/hosts"
+    state: present
+    line: "{{ item.line }}"
+  with_items:
+    - {line: '{{ inventory_hostname }}  {{ my_host_var }}'}

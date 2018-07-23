@@ -1,0 +1,6 @@
+---
+- name: set_hostname 
+  hosts: all
+  become: yes
+  roles:
+    - set_hostname

@@ -1,0 +1,6 @@
+---
+- name: Commentout ipv6 
+  hosts: all
+  become: yes
+  roles:
+    - commentout_ipv6
